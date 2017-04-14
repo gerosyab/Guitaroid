@@ -8,22 +8,33 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="net.gerosyab.guitaroid.activity.MainActivity">
+        <activity android:name="net.gerosyab.guitaroid.activity.MainActivity"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="net.gerosyab.guitaroid.activity.MetronomeActivity">
+        <activity android:name="net.gerosyab.guitaroid.activity.MetronomeActivity"
+            android:parentActivityName="net.gerosyab.guitaroid.activity.MainActivity"
+            android:launchMode="singleTask">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value="net.gerosyab.guitaroid.activity.MainActivity"/>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
-        <activity android:name="net.gerosyab.guitaroid.activity.RhythmGuideActivity">
+        <activity android:name="net.gerosyab.guitaroid.activity.RhythmGuideActivity"
+            android:parentActivityName="net.gerosyab.guitaroid.activity.MainActivity"
+            android:launchMode="singleTask">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value="net.gerosyab.guitaroid.activity.MainActivity"/>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
+        <service android:name="net.gerosyab.guitaroid.service.MetronomeService"
+            android:exported="false"/>
     </application>
 
 </manifest>

@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Guitaroid</string>
+    <string name="notification_title">notification title</string>
+    <string name="notification_message">notification message</string>
+    <string name="ticker_text">ticker</string>
 </resources>
