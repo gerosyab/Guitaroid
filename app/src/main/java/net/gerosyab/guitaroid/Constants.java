@@ -26,4 +26,13 @@ public class Constants {
         public static int METRONOME_FOREGROUND_SERVICE = 101;
         public static int RHYTHM_GUIDE_FOREGROUND_SERVICE = 102;
     }
+
+    public interface METRONOME {
+        public long MIN_BPM = 10;
+        public long MAX_BPM = 300;
+        public int[][] SOUND_LIST = {{R.raw.beep1, R.raw.beep2}};
+        public int MAX_ACCENT = 16;
+        public static String BROADCAST_MESSAGE = "net.gerosyab.guitaroid.service.MetronomeService.BROADCAST_MESSAGE";
+    }
+
 }

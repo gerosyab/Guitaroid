@@ -10,14 +10,13 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.RemoteViews;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import net.gerosyab.guitaroid.Constants;
 import net.gerosyab.guitaroid.R;
-import net.gerosyab.guitaroid.activity.MainActivity;
 import net.gerosyab.guitaroid.activity.MetronomeActivity;
 
 
@@ -30,14 +29,16 @@ public class MetronomeService extends Service {
     private final IBinder mBinder = new LocalBinder();
     private static Notification notification;
     private static RemoteViews views;
-    private static boolean isPlaying = false;
-    private static long curBpm = 120;
-    private static long curAccent = 0;
-    private static long curSoundIdx = 0;
+    private LocalBroadcastManager localBroadCastManager;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        localBroadCastManager = LocalBroadcastManager.getInstance(this);
+    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         if (intent.getAction().equals(Constants.ACTION.METRONOME_STARTFOREGROUND_ACTION)) {
             showNotification();
             Log.i(LOG_TAG, "Received Start Foreground Intent ");
@@ -65,47 +66,11 @@ public class MetronomeService extends Service {
         return START_STICKY;
     }
 
-    public boolean isPlaying(){
-        return isPlaying;
-    }
-
-    public void play(){
-
-    }
-
-    public void pause(){
-
-    }
-
-    public long getBpm(){
-        return curBpm;
-    }
-
-    public void setBpm(long bpm){
-        curBpm = bpm;
-        refresh();
-    }
-
-    public void setSound(long idx){
-        curSoundIdx = idx;
-        refresh();
-    }
-
-    public long getSound(){
-        return curSoundIdx;
-    }
-
-    public long getAccent(){
-        return curAccent;
-    }
-
-    public void setAccent(long accent){
-        curAccent = accent;
-        refresh();
-    }
-
-    private void refresh(){
-
+    public void sendResult(String message) {
+        Intent intent = new Intent(Constants.METRONOME.BROADCAST_MESSAGE);
+        if(message != null)
+            intent.putExtra(Constants.METRONOME.BROADCAST_MESSAGE, message);
+        localBroadCastManager.sendBroadcast(intent);
     }
 
     private void showNotification(){
@@ -173,4 +138,5 @@ public class MetronomeService extends Service {
             return MetronomeService.this;
         }
     }
+
 }
