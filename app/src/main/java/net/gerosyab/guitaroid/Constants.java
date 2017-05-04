@@ -38,10 +38,6 @@ public class Constants {
         public String[] SOUND_RESOURCE_NAME_LIST = {"BEEP", "COW BELL", "HI-HAT", "RIDE BELL", "RIM SHOT", "STICK", "TICK"};
         public int MAX_ACCENT = 16;
         public static String BROADCAST_MESSAGE = "net.gerosyab.guitaroid.service.MetronomeService.BROADCAST_MESSAGE";
-        public static final int MSG_BPM = 0;
-        public static final int MSG_SOUND = 1;
-        public static final int MSG_ACCENT = 2;
-        public static final int MSG_PLAY = 3;
         public static final String EXTRA_BPM_KEY = "net.gerosyab.guitaroid.service.MetronomeService.EXTRA_BPM_KEY";
         public static final String EXTRA_SOUND_KEY = "net.gerosyab.guitaroid.service.MetronomeService.EXTRA_SOUND_KEY";
         public static final String EXTRA_ACCENT_KEY = "net.gerosyab.guitaroid.service.MetronomeService.EXTRA_ACCENT_KEY";
