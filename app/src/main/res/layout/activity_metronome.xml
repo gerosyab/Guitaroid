@@ -117,32 +117,30 @@
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintLeft_toRightOf="@+id/activity_metronome_accent_text" />
 
-        <Button
+        <net.gerosyab.guitaroid.view.CircleButton
             android:id="@+id/button1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
-            android:layout_marginBottom="8dp"
-            android:layout_marginRight="8dp"
+            android:layout_margin="8dp"
             android:text="START"
+            android:textColor="#FFFFFF"
+            android:textAlignment="center"
+            android:background="@drawable/round_button"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintHorizontal_weight="1"
-            app:layout_constraintRight_toLeftOf="@+id/button2"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp" />
+            app:layout_constraintRight_toLeftOf="@+id/button2"/>
 
-        <Button
+        <net.gerosyab.guitaroid.view.CircleProgressButton
             android:id="@+id/button2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginRight="8dp"
-            android:layout_marginBottom="8dp"
+            android:layout_margin="8dp"
             android:text="TAP TEMPO"
+            android:background="@drawable/round_button"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toRightOf="@+id/button1"
-            app:layout_constraintHorizontal_weight="1"
-            android:layout_marginEnd="8dp" />
+            app:layout_constraintHorizontal_weight="1" />
     </android.support.constraint.ConstraintLayout>
 </RelativeLayout>

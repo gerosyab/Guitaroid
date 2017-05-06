@@ -36,5 +36,5 @@
         <service android:name="net.gerosyab.guitaroid.service.MetronomeService"
             android:exported="false"/>
     </application>
-
+    <uses-permission android:name="android.permission.VIBRATE"/>
 </manifest>
