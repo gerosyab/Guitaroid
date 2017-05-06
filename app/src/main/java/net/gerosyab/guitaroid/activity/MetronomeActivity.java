@@ -332,7 +332,7 @@ public class MetronomeActivity extends AppCompatActivity {
             public void onClick(View view) {
                 vibes.vibrate(50);
                 bpmUtil.tap();
-                button2.startAnimation((int) bpm / 100);
+                button2.startAnimation((int) bpm);
                 if (timer != null) {
                     timer.cancel();
                 }

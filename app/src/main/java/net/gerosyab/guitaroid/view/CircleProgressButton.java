@@ -75,6 +75,7 @@ public class CircleProgressButton extends android.support.v7.widget.AppCompatBut
 
     public void startAnimation(int speed){
         progress = 0f;
+        this.speed = (int) radius / speed;
         post(animator);
     }
 
