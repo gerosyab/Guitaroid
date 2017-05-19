@@ -1,5 +1,7 @@
 package net.gerosyab.guitaroid.activity;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -7,7 +9,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Messenger;
 import android.os.Vibrator;
@@ -16,7 +21,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.ScaleAnimation;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,8 +53,9 @@ public class MetronomeActivity extends AppCompatActivity {
     BroadcastReceiver broadcastReceiver;
     AutoRepeatImageView bpmMinusImg, bpmPlusImg, accentPrevImg, accentNextImg, soundPrevImg, soundNextImg;
     TextView bpmText, accentText, soundText;
+    ImageView button1BackgroundImage, button2BackgroudImage;
     CircleButton button1;
-    CircleProgressButton button2;
+    CircleButton button2;
     private long tapStartTime;
     private long tapEndTime;
     long bpm = 120;
@@ -57,6 +67,7 @@ public class MetronomeActivity extends AppCompatActivity {
     Vibrator vibes;
     BpmUtil bpmUtil;
     public static long BPM_CALC_RESET_DURATION = 5000;
+    Animation tapAnim;
 
 
     @Override
@@ -64,6 +75,8 @@ public class MetronomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         context = getApplicationContext();
         setContentView(R.layout.activity_metronome);
+
+        tapAnim = AnimationUtils.loadAnimation(context, R.anim.tap_anim);
 
         bpmUtil = new BpmUtil();
         vibes = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -161,7 +174,7 @@ public class MetronomeActivity extends AppCompatActivity {
 
     private void initViews() {
         button1 = (CircleButton) findViewById(R.id.button1);
-        button2 = (CircleProgressButton) findViewById(R.id.button2);
+        button2 = (CircleButton) findViewById(R.id.button2);
         bpmMinusImg = (AutoRepeatImageView) findViewById(R.id.activity_metronome_bpm_minus_img);
         bpmPlusImg = (AutoRepeatImageView) findViewById(R.id.activity_metronome_bpm_plus_img);
         accentPrevImg = (AutoRepeatImageView) findViewById(R.id.activity_metronome_accent_prev_img);
@@ -171,6 +184,8 @@ public class MetronomeActivity extends AppCompatActivity {
         bpmText = (TextView) findViewById(R.id.activity_metronome_bpm_text);
         accentText = (TextView) findViewById(R.id.activity_metronome_accent_text);
         soundText = (TextView) findViewById(R.id.activity_metronome_sound_text);
+        button1BackgroundImage = (ImageView) findViewById(R.id.button1BackgroundImage);
+        button2BackgroudImage = (ImageView) findViewById(R.id.button2BackgroundImage);
 
         bpmText.setText(bpm + "");
         soundText.setText(Constants.METRONOME.SOUND_RESOURCE_NAME_LIST[sound]);
@@ -301,6 +316,7 @@ public class MetronomeActivity extends AppCompatActivity {
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
 //                isAlive = isServiceRunningInForeground(getApplicationContext(), MetronomeService.class);
                 Intent intent = new Intent(MetronomeActivity.this, MetronomeService.class);
 //                if (!isAlive) {
@@ -330,12 +346,19 @@ public class MetronomeActivity extends AppCompatActivity {
         button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                vibes.vibrate(50);
-                bpmUtil.tap();
-                button2.startAnimation((int) bpm);
                 if (timer != null) {
+                    Log.i(LOG_TAG, "timer.cancel()");
                     timer.cancel();
                 }
+
+                vibes.vibrate(50);
+                bpmUtil.tap();
+                long tapAnimDuration = 200;
+                if(bpm != 0) tapAnimDuration = (1000 * 60 / bpm);
+                tapAnim.setDuration(tapAnimDuration);
+                tapAnim.setRepeatCount(Animation.INFINITE);
+                tapAnim.setRepeatMode(Animation.RESTART);
+
                 timer = new Timer("BPM UTIL TIMER", true);
                 timer.schedule(new TimerTask() {
                     @Override
@@ -344,12 +367,16 @@ public class MetronomeActivity extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                button2.stopAnimation();
+                                Log.i(LOG_TAG, "clearAnimation()");
+                                button2BackgroudImage.clearAnimation();
                             }
                         });
                     }
                 }, BPM_CALC_RESET_DURATION);
-//                updateView();
+
+                button2BackgroudImage.clearAnimation();
+                button2BackgroudImage.startAnimation(tapAnim);
+
                 if(bpmUtil.taps.size() >= 2){
                     bpm = bpmUtil.getBpm();
                     bpmText.setText(bpm + "");
@@ -359,5 +386,6 @@ public class MetronomeActivity extends AppCompatActivity {
                 }
             }
         });
+
     }
 }

@@ -67,8 +67,8 @@ public class CircleProgressButton extends View {
     private void init(Context context, AttributeSet attrs) {
         int backgroundColor = DEFAULT_BACKGROUND_COLOR;
         int outerColor = ContextCompat.getColor(context, R.color.colorCircleOuter);
-        int progressColor = ContextCompat.getColor(context, R.color.colorCircleProgress);
-        int textColor = ContextCompat.getColor(context, R.color.colorCircleProgressText);
+        int progressColor = ContextCompat.getColor(context, R.color.colorCircleInner);
+        int textColor = ContextCompat.getColor(context, android.R.color.black);
         float textSize = getResources().getDimension(R.dimen.circleProgressTextSize);
         float outerSize = getResources().getDimension(R.dimen.circleProgressOuterSize);
 

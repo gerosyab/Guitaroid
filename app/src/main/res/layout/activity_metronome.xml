@@ -116,31 +116,54 @@
             app:layout_constraintTop_toBottomOf="@+id/activity_metronome_sound_prev_img"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintLeft_toRightOf="@+id/activity_metronome_accent_text" />
-
-        <net.gerosyab.guitaroid.view.CircleButton
-            android:id="@+id/button1"
+        <FrameLayout
+            android:id="@+id/button1WrapperFrame"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            android:text="START"
-            android:textColor="#FFFFFF"
-            android:textAlignment="center"
-            android:background="@drawable/round_button"
+            android:background="@drawable/circle_border"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintHorizontal_weight="1"
-            app:layout_constraintRight_toLeftOf="@+id/button2"/>
-
-        <net.gerosyab.guitaroid.view.CircleProgressButton
-            android:id="@+id/button2"
+            app:layout_constraintRight_toLeftOf="@+id/button2WrapperFrame">
+            <net.gerosyab.guitaroid.view.CircleButton
+                android:id="@+id/button1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/circleBorderWidth"
+                android:background="@drawable/circle_button"
+                android:text="START"
+                android:textColor="#111111" />
+            <ImageView
+                android:id="@+id/button1BackgroundImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="@dimen/circleBorderWidth"
+                android:src="@drawable/circle_inner"/>
+        </FrameLayout>
+        <FrameLayout
+            android:id="@+id/button2WrapperFrame"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            android:text="TAP TEMPO"
-            app:text="TAP TEMPO"
+            android:background="@drawable/circle_border"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toRightOf="@+id/button1"
-            app:layout_constraintHorizontal_weight="1" />
+            app:layout_constraintLeft_toRightOf="@+id/button1WrapperFrame"
+            app:layout_constraintHorizontal_weight="1">
+            <net.gerosyab.guitaroid.view.CircleButton
+                android:id="@+id/button2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/circleBorderWidth"
+                android:background="@drawable/circle_button"
+                android:text="TAP TEMPO" />
+            <ImageView
+                android:id="@+id/button2BackgroundImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="@dimen/circleBorderWidth"
+                android:src="@drawable/circle_inner"/>
+        </FrameLayout>
     </android.support.constraint.ConstraintLayout>
 </RelativeLayout>

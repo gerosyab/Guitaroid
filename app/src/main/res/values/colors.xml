@@ -3,7 +3,7 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
-    <color name="colorCircleProgress">#00ccff</color>
+    <color name="colorCircleInner">#00ccff</color>
     <color name="colorCircleOuter">#FF4081</color>
-    <color name="colorCircleProgressText">#000000</color>
+    <color name="colorCircleInnerPressed">#0099bb</color>
 </resources>

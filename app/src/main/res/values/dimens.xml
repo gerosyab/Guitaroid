@@ -4,4 +4,5 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="circleProgressTextSize">12sp</dimen>
     <dimen name="circleProgressOuterSize">15dp</dimen>
+    <dimen name="circleBorderWidth">7dp</dimen>
 </resources>
