@@ -1,7 +1,5 @@
 package net.gerosyab.guitaroid.activity;
 
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -9,22 +7,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.graphics.drawable.AnimationDrawable;
-import android.graphics.drawable.Drawable;
+import android.graphics.Typeface;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Messenger;
 import android.os.Vibrator;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.animation.ScaleAnimation;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,7 +28,6 @@ import net.gerosyab.guitaroid.R;
 import net.gerosyab.guitaroid.util.BpmUtil;
 import net.gerosyab.guitaroid.view.AutoRepeatImageView;
 import net.gerosyab.guitaroid.view.CircleButton;
-import net.gerosyab.guitaroid.view.CircleProgressButton;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -52,7 +43,7 @@ public class MetronomeActivity extends AppCompatActivity {
     private boolean isTapClicked = false;
     BroadcastReceiver broadcastReceiver;
     AutoRepeatImageView bpmMinusImg, bpmPlusImg, accentPrevImg, accentNextImg, soundPrevImg, soundNextImg;
-    TextView bpmText, accentText, soundText;
+    TextView bpmText, bpmBgText, accentText, soundText;
     ImageView button1BackgroundImage, button2BackgroudImage;
     CircleButton button1;
     CircleButton button2;
@@ -68,7 +59,7 @@ public class MetronomeActivity extends AppCompatActivity {
     BpmUtil bpmUtil;
     public static long BPM_CALC_RESET_DURATION = 5000;
     Animation tapAnim;
-
+    Typeface typeface;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,10 +67,10 @@ public class MetronomeActivity extends AppCompatActivity {
         context = getApplicationContext();
         setContentView(R.layout.activity_metronome);
 
-        tapAnim = AnimationUtils.loadAnimation(context, R.anim.tap_anim);
-
         bpmUtil = new BpmUtil();
         vibes = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
+        typeface = Typeface.createFromAsset(getAssets(), "fonts/7segment.ttf");
 
         initViews();
 
@@ -90,7 +81,8 @@ public class MetronomeActivity extends AppCompatActivity {
                 String action = intent.getAction();
                 Toast.makeText(getApplicationContext(), "broadcastReceiver.onReceive, action : " + action, Toast.LENGTH_SHORT).show();
                 bpm = intent.getLongExtra(Constants.METRONOME.EXTRA_BPM_KEY, 120);
-                bpmText.setText(bpm + "");
+                if(bpm < 100) bpmText.setText("!" + String.format("%d", bpm));
+                else bpmText.setText(String.format("%d", bpm));
             }
         };
 
@@ -104,7 +96,8 @@ public class MetronomeActivity extends AppCompatActivity {
             LocalBinder binder = (LocalBinder) service;
             mService = binder.getService();
             bpm = mService.getBpm();
-            bpmText.setText(bpm + "");
+            if(bpm < 100) bpmText.setText("!" + String.format("%d", bpm));
+            else bpmText.setText(String.format("%d", bpm));
             sound = mService.getSound();
             soundText.setText(Constants.METRONOME.SOUND_RESOURCE_NAME_LIST[sound]);
             accent = mService.getAccent();
@@ -182,23 +175,46 @@ public class MetronomeActivity extends AppCompatActivity {
         soundPrevImg = (AutoRepeatImageView) findViewById(R.id.activity_metronome_sound_prev_img);
         soundNextImg = (AutoRepeatImageView) findViewById(R.id.activity_metronome_sound_next_img);
         bpmText = (TextView) findViewById(R.id.activity_metronome_bpm_text);
+        bpmText.setTypeface(typeface);
+        bpmBgText = (TextView) findViewById(R.id.activity_metronome_bpm_bg_text);
+        bpmBgText.setTypeface(typeface);
         accentText = (TextView) findViewById(R.id.activity_metronome_accent_text);
         soundText = (TextView) findViewById(R.id.activity_metronome_sound_text);
         button1BackgroundImage = (ImageView) findViewById(R.id.button1BackgroundImage);
         button2BackgroudImage = (ImageView) findViewById(R.id.button2BackgroundImage);
 
-        bpmText.setText(bpm + "");
+        if(bpm < 100) bpmText.setText("!" + String.format("%d", bpm));
+        else bpmText.setText(String.format("%d", bpm));
         soundText.setText(Constants.METRONOME.SOUND_RESOURCE_NAME_LIST[sound]);
         accentText.setText(accent + "");
 
+        tapAnim = AnimationUtils.loadAnimation(context, R.anim.tap_anim);
+        tapAnim.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                Log.i(LOG_TAG, "tapAnim.onAnimationStart");
+            }
 
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                Log.i(LOG_TAG, "tapAnim.onAnimationEnd");
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+                Log.i(LOG_TAG, "tapAnim.onAnimationRepeat");
+            }
+
+
+        });
 
         bpmMinusImg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (bpm > Constants.METRONOME.MIN_BPM) {
                     bpm--;
-                    bpmText.setText(String.format("%d", bpm));
+                    if(bpm < 100) bpmText.setText("!" + String.format("%d", bpm));
+                    else bpmText.setText(String.format("%d", bpm));
                 }
             }
         });
@@ -208,7 +224,8 @@ public class MetronomeActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if (bpm < Constants.METRONOME.MAX_BPM) {
                     bpm++;
-                    bpmText.setText(String.format("%d", bpm));
+                    if(bpm < 100) bpmText.setText("!" + String.format("%d", bpm));
+                    else bpmText.setText(String.format("%d", bpm));
                 }
             }
         });
@@ -356,34 +373,39 @@ public class MetronomeActivity extends AppCompatActivity {
                 long tapAnimDuration = 200;
                 if(bpm != 0) tapAnimDuration = (1000 * 60 / bpm);
                 tapAnim.setDuration(tapAnimDuration);
-                tapAnim.setRepeatCount(Animation.INFINITE);
+                int repeatCount = (int) (BPM_CALC_RESET_DURATION / tapAnimDuration) + 10;
+//                tapAnim.setRepeatCount(Animation.INFINITE);
+                tapAnim.setRepeatCount(repeatCount);
                 tapAnim.setRepeatMode(Animation.RESTART);
-
                 timer = new Timer("BPM UTIL TIMER", true);
-                timer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        bpmUtil.reset();
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Log.i(LOG_TAG, "clearAnimation()");
-                                button2BackgroudImage.clearAnimation();
-                            }
-                        });
-                    }
-                }, BPM_CALC_RESET_DURATION);
 
                 button2BackgroudImage.clearAnimation();
                 button2BackgroudImage.startAnimation(tapAnim);
 
                 if(bpmUtil.taps.size() >= 2){
                     bpm = bpmUtil.getBpm();
-                    bpmText.setText(bpm + "");
+                    if(bpm < 100) bpmText.setText("!" + String.format("%d", bpm));
+                    else bpmText.setText(String.format("%d", bpm));
                     if(mService != null && mService.isNotificationExist()){
                         mService.setBpm(bpm);
                     }
                 }
+
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        Log.i(LOG_TAG, "bpmUtil.reset()");
+//                        bpmUtil.reset();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.i(LOG_TAG, "clearAnimation()");
+                                bpmUtil.reset();
+                                button2BackgroudImage.clearAnimation();
+                            }
+                        });
+                    }
+                }, BPM_CALC_RESET_DURATION);
             }
         });
 

@@ -27,8 +27,16 @@ public class BpmUtil {
     }
 
     public void reset(){
-        taps.clear();
+//        final ArrayList<Long> oldTaps = taps;
+        taps = null;
+        taps = new ArrayList<Long>();
         isTapping = false;
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                oldTaps.clear();
+//            }
+//        }).start();
     }
 
     public long getBpm(){

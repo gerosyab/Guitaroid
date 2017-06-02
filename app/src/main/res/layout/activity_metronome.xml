@@ -26,21 +26,36 @@
             android:src="@drawable/minus_icon"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toLeftOf="@+id/activity_metronome_bpm_text" />
-        <TextView
-            android:id="@+id/activity_metronome_bpm_text"
+            app:layout_constraintRight_toLeftOf="@+id/activity_metronome_bpm_frame" />
+        <FrameLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:text="120"
-            android:textSize="30sp"
-            android:gravity="center"
+            android:id="@+id/activity_metronome_bpm_frame"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintHorizontal_chainStyle="spread"
             app:layout_constraintHorizontal_weight="1"
             app:layout_constraintLeft_toRightOf="@+id/activity_metronome_bpm_minus_img"
-            app:layout_constraintRight_toLeftOf="@+id/activity_metronome_bpm_plus_img"
-            />
+            app:layout_constraintRight_toLeftOf="@+id/activity_metronome_bpm_plus_img">
+                <TextView
+                    android:id="@+id/activity_metronome_bpm_bg_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:text="888"
+                    android:textSize="30sp"
+                    android:textColor="#FFDDDDDD"
+                    android:gravity="center"
+                    />
+                <TextView
+                    android:id="@+id/activity_metronome_bpm_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:text="120"
+                    android:textSize="30sp"
+                    android:gravity="center"
+                    />
+            </FrameLayout>
         <net.gerosyab.guitaroid.view.AutoRepeatImageView
             android:id="@+id/activity_metronome_bpm_plus_img"
             android:layout_width="30dp"
@@ -49,7 +64,7 @@
             android:src="@drawable/plus_icon"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintLeft_toRightOf="@+id/activity_metronome_bpm_text" />
+            app:layout_constraintLeft_toRightOf="@+id/activity_metronome_bpm_frame" />
 
         <net.gerosyab.guitaroid.view.AutoRepeatImageView
             android:id="@+id/activity_metronome_sound_prev_img"
