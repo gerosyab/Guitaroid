@@ -33,7 +33,8 @@ public class MainActivity extends AppCompatActivity {
         imageButton2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                Intent intent = new Intent(getApplicationContext(), RhythmGuideActivity.class);
+                startActivity(intent);
             }
         });
     }
