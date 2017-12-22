@@ -26,7 +26,18 @@
         </activity>
         <activity android:name="net.gerosyab.guitaroid.activity.RhythmGuideActivity"
             android:parentActivityName="net.gerosyab.guitaroid.activity.MainActivity"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:hardwareAccelerated="false">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value="net.gerosyab.guitaroid.activity.MainActivity"/>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        <activity android:name="net.gerosyab.guitaroid.activity.VirtualGuitarActivity"
+            android:parentActivityName="net.gerosyab.guitaroid.activity.MainActivity"
+            android:launchMode="singleTask"
+            android:hardwareAccelerated="false">
             <meta-data android:name="android.support.PARENT_ACTIVITY"
                 android:value="net.gerosyab.guitaroid.activity.MainActivity"/>
             <intent-filter>
@@ -37,4 +48,8 @@
             android:exported="false"/>
     </application>
     <uses-permission android:name="android.permission.VIBRATE"/>
+    <!--<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-feature android:name="android.hardware.audio.output" android:required="true" />-->
 </manifest>
