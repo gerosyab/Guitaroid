@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
+#include <android/log.h>
 
 /* SampleManager hooks */
 
@@ -47,76 +48,97 @@ bool JavaUtilities::createSampleFromFile( jstring aKey, jstring aWAVFilePath )
     return true;
 }
 
-bool JavaUtilities::createSampleFromAsset( jstring aKey, jobject assetManager, jstring cacheDir, jstring assetName )
-{
-    std::string filename   = JavaBridge::getString( assetName );
-    std::string tempFolder = JavaBridge::getString( cacheDir );
+bool JavaUtilities::createSampleFromAsset( jstring aKey, jobject assetManager, jstring cacheDir, jstring assetName ) {
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid", "JavaUtilities::createSampleFromAsset");
+    std::string filename = JavaBridge::getString(assetName);
+    std::string tempFolder = JavaBridge::getString(cacheDir);
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                        "JavaUtilities::createSampleFromAsset filename : %s", filename.c_str());
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                        "JavaUtilities::createSampleFromAsset tempFolder : %s", tempFolder.c_str());
 
     // use asset manager to open asset by filename
-    AAssetManager* mgr = AAssetManager_fromJava( JavaBridge::getEnvironment(), assetManager );
+    AAssetManager *mgr = AAssetManager_fromJava(JavaBridge::getEnvironment(), assetManager);
 
-    if ( mgr == NULL )
+    if (mgr == NULL) {
+        __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                            "JavaUtilities::createSampleFromAsset mgr == NULL");
         return false;
+    }
 
-    AAsset* asset = AAssetManager_open( mgr, filename.c_str(), AASSET_MODE_UNKNOWN );
+    AAsset *asset = AAssetManager_open(mgr, filename.c_str(), AASSET_MODE_UNKNOWN);
 
-    if ( asset == NULL )
+    if (asset == NULL) {
+        __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                            "JavaUtilities::createSampleFromAsset asset == NULL");
         return false;
-
+    }
     std::vector<char> buffer;
 
-    off64_t length = AAsset_getLength64( asset );
+    off64_t length = AAsset_getLength64(asset);
     off64_t remaining = AAsset_getRemainingLength64(asset);
     size_t Mb = 1000 * 1024; // read assets in one megabyte chunks
     size_t currChunk;
-    buffer.reserve( length );
+    buffer.reserve(length);
+
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                        "JavaUtilities::createSampleFromAsset length : %ld", (long)length);
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                        "JavaUtilities::createSampleFromAsset remaining : %ld", (long)remaining);
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                        "JavaUtilities::createSampleFromAsset Mb : %lu", (unsigned long)Mb);
 
     // TODO: hackaroni. Prior to Android NDK 26 we could read an asset directly
     // as a ByteArray (well, we still can) and read the WAV data from it (in WaveReader, this
     // now fails...) for now we do the wasteful thing by creating a temporary file...
 
     std::string tempFile = tempFolder + "/tmp";
-    FILE* tmp = fopen( tempFile.c_str(), "w" );
-    bool readUsingTempFile = ( tmp != 0 );
+    FILE *tmp = fopen(tempFile.c_str(), "w");
+    bool readUsingTempFile = (tmp != 0);
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                        "JavaUtilities::createSampleFromAsset readUsingTempFile : %s", readUsingTempFile ? "true" : "false");
+
     int nb_read = 0;
 
-    while ( remaining != 0 ) {
+    while (remaining != 0) {
         //set proper size for our next chunk
-        if ( remaining >= Mb )
+        if (remaining >= Mb)
             currChunk = Mb;
         else
             currChunk = remaining;
 
-        char chunk[ currChunk ];
+        char chunk[currChunk];
 
         // read next chunk and append to temporary buffer
 
-        if (( nb_read = AAsset_read( asset, chunk, currChunk )) > 0 ) {
+        if ((nb_read = AAsset_read(asset, chunk, currChunk)) > 0) {
 
-            if ( !readUsingTempFile )
-                buffer.insert( buffer.end(), chunk, chunk + currChunk );
+            if (!readUsingTempFile)
+                buffer.insert(buffer.end(), chunk, chunk + currChunk);
             else
-                fwrite( chunk, nb_read, 1, tmp );
+                fwrite(chunk, nb_read, 1, tmp);
 
-            remaining = AAsset_getRemainingLength64( asset );
+            remaining = AAsset_getRemainingLength64(asset);
         }
     }
-    AAsset_close( asset );
-    AudioBuffer* sampleBuffer;
+    AAsset_close(asset);
+    AudioBuffer *sampleBuffer;
 
-    if ( readUsingTempFile ) {
-        fclose( tmp );
-        sampleBuffer = WaveReader::fileToBuffer( tempFile );
-        remove( tempFile.c_str() );
-    }
-    else {
-        sampleBuffer = WaveReader::byteArrayToBuffer( buffer );
+    if (readUsingTempFile) {
+        fclose(tmp);
+        sampleBuffer = WaveReader::fileToBuffer(tempFile);
+        remove(tempFile.c_str());
+    } else {
+        sampleBuffer = WaveReader::byteArrayToBuffer(buffer);
     }
 
     // error during loading of WAV file ?
 
-    if ( sampleBuffer == NULL )
+    if (sampleBuffer == NULL) {
+        __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                            "JavaUtilities::createSampleFromAsset sampleBuffer == NULL");
         return false;
+    }
 
     SampleManager::setSample( JavaBridge::getString( aKey ), sampleBuffer );
 

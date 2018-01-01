@@ -25,9 +25,28 @@
 #include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <android/log.h>
 
 AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
-{ 
+{
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                        "WaveReader::fileToBuffer inputFile : %s", inputFile.c_str());
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                        "sizeof(short) : %ld", (long) sizeof(short));
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                        "sizeof(int) : %ld", (long) sizeof(int));
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                        "sizeof(long) : %ld", (long) sizeof(long));
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                        "sizeof(unsigned int) : %ld", (long) sizeof(unsigned int));
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                        "sizeof(unsigned long) : %ld", (long) sizeof(unsigned long));
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                        "sizeof(int32_t) : %ld", (long) sizeof(int32_t));
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                        "sizeof(int64_t) : %ld", (long) sizeof(int64_t));
+    __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                        "sizeof(u_long) : %ld", (long) sizeof(u_long));
     FILE* fp;
     AudioBuffer* out = 0;
 
@@ -46,26 +65,37 @@ AudioBuffer* WaveReader::fileToBuffer( std::string inputFile )
         fread( id, sizeof( char ), 4, fp );
         id[ 4 ] = '\0';
 
+        __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                            "WaveReader::fileToBuffer id 1 : %s", id);
+
         if ( !strcmp( id, "RIFF" ))
         {
-            fread( &size, sizeof( unsigned long ), 1, fp );
+            //fread( &size, sizeof( unsigned long ), 1, fp );
+            fread( &size, sizeof( unsigned int ), 1, fp );
             fread( id,    sizeof( unsigned char ), 4, fp );
             id[ 4 ] = '\0';
+
+            __android_log_print(ANDROID_LOG_DEBUG, "guitaroid",
+                                "WaveReader::fileToBuffer id 2 : %s", id);
 
             if ( !strcmp( id, "WAVE" ))
             {
                 // read the header data (see http://soundfile.sapp.org/doc/WaveFormat/)
 
                 fread( id,                sizeof( char ), 4, fp );
-                fread( &format,           sizeof( unsigned long ), 1, fp );
+//                fread( &format,           sizeof( unsigned long ), 1, fp );
+                fread( &format,           sizeof( unsigned int ), 1, fp );
                 fread( &tag,              sizeof( short ), 1, fp );
                 fread( &amountOfChannels, sizeof( short ), 1, fp );
-                fread( &sampleRate,       sizeof( unsigned long ), 1, fp );
-                fread( &bytesPerSec,      sizeof( unsigned long ), 1, fp );
+//                fread( &sampleRate,       sizeof( unsigned long ), 1, fp );
+                fread( &sampleRate,       sizeof( unsigned int ), 1, fp );
+//                fread( &bytesPerSec,      sizeof( unsigned long ), 1, fp );
+                fread( &bytesPerSec,      sizeof( unsigned int ), 1, fp );
                 fread( &blockAlign,       sizeof( short ), 1, fp );
                 fread( &bps,              sizeof( short ), 1, fp );
                 fread( id,                sizeof( char ), 4, fp );
-                fread( &dataSize,         sizeof( unsigned long ), 1, fp );
+//                fread( &dataSize,         sizeof( unsigned long ), 1, fp );
+                fread( &dataSize,         sizeof( unsigned int ), 1, fp );
 
                 sound_buffer = ( short* ) malloc( dataSize );
 

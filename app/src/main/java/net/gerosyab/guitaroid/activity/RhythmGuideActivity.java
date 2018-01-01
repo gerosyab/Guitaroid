@@ -1,6 +1,7 @@
 package net.gerosyab.guitaroid.activity;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -11,6 +12,8 @@ import android.widget.TextView;
 
 import net.gerosyab.guitaroid.R;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Vector;
 
 import nl.igorski.lib.audio.MWEngine;
@@ -165,8 +168,9 @@ public class RhythmGuideActivity extends AppCompatActivity {
 
 //        loadWAVAsset( "hat.wav",  "hat" );
 //        loadWAVAsset( "clap.wav", "clap" );
-        loadWAVAsset( "bassdrum.wav",  "hat" );
-        loadWAVAsset( "bb_clap_1.wav", "clap" );
+        loadWAVAsset( "kick.wav",  "kick" );
+        loadWAVAsset( "hihat.wav", "hihat" );
+        loadWAVAsset( "snare.wav",  "snare" );
 
         // STEP 4 : let's create some music !
 
@@ -178,45 +182,59 @@ public class RhythmGuideActivity extends AppCompatActivity {
 
         // STEP 4.1 : Sample events to play back a drum beat
 
-        createDrumEvent( "hat",  2 );  // hi-hat on the second 8th note after the first beat of the bar
-        createDrumEvent( "hat",  6 );  // hi-hat on the second 8th note after the second beat
-        createDrumEvent( "hat",  10 ); // hi-hat on the second 8th note after the third beat
-        createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
-        createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
-        createDrumEvent( "clap", 12 ); // clap sound on the third beat of the bar
+//        createDrumEvent( "hat",  2 );  // hi-hat on the second 8th note after the first beat of the bar
+//        createDrumEvent( "hat",  6 );  // hi-hat on the second 8th note after the second beat
+//        createDrumEvent( "hat",  10 ); // hi-hat on the second 8th note after the third beat
+//        createDrumEvent( "hat",  14 ); // hi-hat on the second 8th note after the fourth beat
+//        createDrumEvent( "clap", 4 );  // clap sound on the second beat of the bar
+//        createDrumEvent( "clap", 12 ); // clap sound on the third beat of the bar
+
+        createDrumEvent( "hihat",  0 );  // hi-hat on the second 8th note after the first beat of the bar
+        createDrumEvent( "hihat",  2 );  // hi-hat on the second 8th note after the second beat
+        createDrumEvent( "hihat",  4 ); // hi-hat on the second 8th note after the third beat
+        createDrumEvent( "hihat",  6 ); // hi-hat on the second 8th note after the fourth beat
+        createDrumEvent( "hihat",  8 ); // hi-hat on the second 8th note after the fourth beat
+        createDrumEvent( "hihat",  10 ); // hi-hat on the second 8th note after the fourth beat
+        createDrumEvent( "hihat",  12 ); // hi-hat on the second 8th note after the fourth beat
+        createDrumEvent( "hihat",  14 ); // hi-hat on the second 8th note after the fourth beat
+        createDrumEvent( "snare", 4 );  // clap sound on the second beat of the bar
+        createDrumEvent( "snare", 12 ); // clap sound on the third beat of the bar
+        createDrumEvent( "kick", 0 ); // clap sound on the third beat of the bar
+        createDrumEvent( "kick", 6 ); // clap sound on the third beat of the bar
+        createDrumEvent( "kick", 8 ); // clap sound on the third beat of the bar
 
         // STEP 4.2 : Real-time synthesis events
 
         // bubbly sixteenth note bass line for synth 1
 
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  0 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  1 );
-        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  2 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  3 );
-        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 4 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  5 );
-        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  6 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  7 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  8 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  9 );
-        createSynthEvent( _synth1, Pitch.note( "D#", 2 ), 10 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  11 );
-        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 12 );
-        createSynthEvent( _synth1, Pitch.note( "A#", 2 ), 13 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  14 );
-        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  15 );
-
-        // off-beat minor seventh chord stabs for synth 2
-
-        createSynthEvent( _synth2, Pitch.note( "C", 3 ),  4 );
-        createSynthEvent( _synth2, Pitch.note( "G", 3 ),  4 );
-        createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 4 );
-        createSynthEvent( _synth2, Pitch.note( "D#", 3 ), 4 );
-
-        createSynthEvent( _synth2, Pitch.note( "D", 3 ), 8 );
-        createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
-        createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
-        createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
+//        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  0 );
+//        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  1 );
+//        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  2 );
+//        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  3 );
+//        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 4 );
+//        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  5 );
+//        createSynthEvent( _synth1, Pitch.note( "C", 3 ),  6 );
+//        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  7 );
+//        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  8 );
+//        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  9 );
+//        createSynthEvent( _synth1, Pitch.note( "D#", 2 ), 10 );
+//        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  11 );
+//        createSynthEvent( _synth1, Pitch.note( "A#", 1 ), 12 );
+//        createSynthEvent( _synth1, Pitch.note( "A#", 2 ), 13 );
+//        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  14 );
+//        createSynthEvent( _synth1, Pitch.note( "C", 2 ),  15 );
+//
+//        // off-beat minor seventh chord stabs for synth 2
+//
+//        createSynthEvent( _synth2, Pitch.note( "C", 3 ),  4 );
+//        createSynthEvent( _synth2, Pitch.note( "G", 3 ),  4 );
+//        createSynthEvent( _synth2, Pitch.note( "A#", 3 ), 4 );
+//        createSynthEvent( _synth2, Pitch.note( "D#", 3 ), 4 );
+//
+//        createSynthEvent( _synth2, Pitch.note( "D", 3 ), 8 );
+//        createSynthEvent( _synth2, Pitch.note( "A", 3 ), 8 );
+//        createSynthEvent( _synth2, Pitch.note( "C", 3 ), 8 );
+//        createSynthEvent( _synth2, Pitch.note( "F", 3 ), 8 );
 
         // STEP 5 : attach event handlers to the UI elements (see main.xml layout)
 
@@ -447,6 +465,25 @@ public class RhythmGuideActivity extends AppCompatActivity {
     private void loadWAVAsset( String assetName, String sampleName )
     {
         final Context ctx = getApplicationContext();
+
+        AssetManager assetMgr = getAssets();
+        try {
+            String[] list = assetMgr.list("/");
+            int length = list.length;
+            for(int i= 0; i < length; i++) {
+                Log.d("guitaroid", "loadWAVAsset() file #" + i + " : " + list[i]);
+            }
+            InputStream is = assetMgr.open("hat.wav");
+            InputStream is2 = assetMgr.open("clap.wav");
+            Log.d("guitaroid", "loadWAVAsset() hihat.wav available() " + is.available());
+            Log.d("guitaroid", "loadWAVAsset() clap.wav available() " + is2.available());
+            is.close();
+            is2.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         Log.d("guitaroid", "loadWAVAsset("+ assetName + ", " + sampleName+ ")");
         Log.d("guitaroid", "loadWAVAsset() - ctx.getAssets() : "+ ctx.getAssets() + ", ctx.getCacheDir() : " + ctx.getCacheDir() + ", ctx.getCacheDir().getAbsolutePath() : " + ctx.getCacheDir().getAbsolutePath() + ")");
         boolean result = JavaUtilities.createSampleFromAsset(
