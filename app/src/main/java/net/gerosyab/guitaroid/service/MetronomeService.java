@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
@@ -16,13 +17,35 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.RemoteViews;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import net.gerosyab.guitaroid.Constants;
 import net.gerosyab.guitaroid.R;
 import net.gerosyab.guitaroid.activity.MetronomeActivity;
+
+import java.util.Vector;
+
+import nl.igorski.lib.audio.MWEngine;
+import nl.igorski.lib.audio.helpers.DevicePropertyCalculator;
+import nl.igorski.lib.audio.mwengine.Delay;
+import nl.igorski.lib.audio.mwengine.Filter;
+import nl.igorski.lib.audio.mwengine.Finalizer;
+import nl.igorski.lib.audio.mwengine.JavaUtilities;
+import nl.igorski.lib.audio.mwengine.LPFHPFilter;
+import nl.igorski.lib.audio.mwengine.Notifications;
+import nl.igorski.lib.audio.mwengine.Phaser;
+import nl.igorski.lib.audio.mwengine.ProcessingChain;
+import nl.igorski.lib.audio.mwengine.SampleEvent;
+import nl.igorski.lib.audio.mwengine.SampleManager;
+import nl.igorski.lib.audio.mwengine.SampledInstrument;
+import nl.igorski.lib.audio.mwengine.SequencerController;
+import nl.igorski.lib.audio.mwengine.SynthEvent;
+import nl.igorski.lib.audio.mwengine.SynthInstrument;
 
 
 /**
@@ -42,11 +65,146 @@ public class MetronomeService extends Service {
     private int sound = 0;
     private int accent = 0;
 
+    private Finalizer           _finalizer;
+    private LPFHPFilter         _lpfhpf;
+    private SynthInstrument     _synth1;
+    private SynthInstrument     _synth2;
+    private SampledInstrument   _sampler;
+    private Filter              _filter;
+    private Phaser              _phaser;
+    private Delay               _delay;
+    private MWEngine            _engine;
+    private SequencerController _sequencerController;
+    private Vector<SynthEvent>  _synth1Events;
+    private Vector<SynthEvent>  _synth2Events;
+    private Vector<SampleEvent> _drumEvents;
+
+    private boolean _sequencerPlaying = false;
+    private boolean _inited           = false;
+
+    private float minFilterCutoff = 50.0f;
+    private float maxFilterCutoff;
+
+    private int SAMPLE_RATE;
+    private int BUFFER_SIZE;
+    private int OUTPUT_CHANNELS = 1; // 1 = mono, 2 = stereo
+
+    private static int STEPS_PER_MEASURE = 16; // amount of subdivisions within a single measure
+
     @Override
     public void onCreate() {
         super.onCreate();
         Log.i(LOG_TAG, "In onCreate");
         localBroadCastManager = LocalBroadcastManager.getInstance(this);
+
+        init();
+    }
+
+    private void init()
+    {
+        if ( _inited)
+            return;
+        else if(_engine == null){
+            Log.d(LOG_TAG, "initing MWEngineActivity");
+
+            // STEP 1 : preparing the native audio engine
+
+            _engine = new MWEngine(getApplicationContext(), new StateObserver());
+
+            // get the recommended buffer size for this device (NOTE : lower buffer sizes may
+            // provide lower latency, but make sure all buffer sizes are powers of two of
+            // the recommended buffer size (overcomes glitching in buffer callbacks )
+            // getting the correct sample rate upfront will omit having audio going past the system
+            // resampler reducing overall latency
+
+            BUFFER_SIZE = DevicePropertyCalculator.getRecommendedBufferSize(getApplicationContext());
+            SAMPLE_RATE = DevicePropertyCalculator.getRecommendedSampleRate(getApplicationContext());
+
+            _engine.createOutput(SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS);
+            _sequencerController = _engine.getSequencerController();
+
+            // cache some of the engines properties
+
+            final ProcessingChain masterBus = _engine.getMasterBusProcessors();
+            final SequencerController sequencer = _engine.getSequencerController();
+
+            sequencer.updateMeasures(1, STEPS_PER_MEASURE); // we'll loop just a single measure with given subdivisions
+            _engine.start(); // starts the engines render thread (NOTE : sequencer is still paused!)
+
+            // create a lowpass filter to catch all low rumbling and a Finalizer (limiter) to prevent clipping of output :)
+            _lpfhpf = new LPFHPFilter((float) MWEngine.SAMPLE_RATE, 55, OUTPUT_CHANNELS);
+            _finalizer = new Finalizer(2f, 500f, MWEngine.SAMPLE_RATE, OUTPUT_CHANNELS);
+
+            masterBus.addProcessor(_finalizer);
+            masterBus.addProcessor(_lpfhpf);
+
+            // STEP 2 : let's create some instruments =D
+
+//            _synth1 = new SynthInstrument();
+//            _synth2 = new SynthInstrument();
+            _sampler = new SampledInstrument();
+
+//            _synth1.getOscillatorProperties(0).setWaveform(2); // sawtooth (see global.h for enumerations)
+//            _synth2.getOscillatorProperties(0).setWaveform(5); // pulse width modulation
+
+            // a high decay for synth 1 (bubblier effect)
+//            _synth1.getAdsr().setDecay(.9f);
+
+            // add a filter to synth 1
+            maxFilterCutoff = (float) SAMPLE_RATE / 8;
+
+            _filter = new Filter(maxFilterCutoff / 2, (float) (Math.sqrt(1) / 2), minFilterCutoff, maxFilterCutoff, 0f, 1);
+//            _synth1.getAudioChannel().getProcessingChain().addProcessor(_filter);
+
+            // add a phaser to synth 1
+            _phaser = new Phaser(.5f, .7f, .5f, 440.f, 1600.f);
+//            _synth1.getAudioChannel().getProcessingChain().addProcessor(_phaser);
+
+            // add some funky delay to synth 2
+            _delay = new Delay(250, 2000, .35f, .5f, OUTPUT_CHANNELS);
+//            _synth2.getAudioChannel().getProcessingChain().addProcessor(_delay);
+
+            // prepare synthesizer volumes
+//            _synth2.getAudioChannel().setVolume(.7f);
+
+            // STEP 3 : load some samples from the packaged assets folder into the SampleManager
+
+            loadWAVAsset("beep1.wav", "beep1");
+            loadWAVAsset("beep2.wav", "beep2");
+
+            // STEP 4 : let's create some music !
+
+//            _synth1Events = new Vector<SynthEvent>();
+//            _synth2Events = new Vector<SynthEvent>();
+            _drumEvents = new Vector<SampleEvent>();
+
+            sequencer.setTempoNow(120.0f, 4, 4); // 120 BPM in 4/4 time
+
+            // STEP 4.1 : Sample events to play back a drum beat
+
+                    createDrumEvent( "beep1",  2 );  // hi-hat on the second 8th note after the first beat of the bar
+                    createDrumEvent( "beep1",  6 );  // hi-hat on the second 8th note after the second beat
+                    createDrumEvent( "beep1",  10 ); // hi-hat on the second 8th note after the third beat
+                    createDrumEvent( "beep1",  14 ); // hi-hat on the second 8th note after the fourth beat
+                    createDrumEvent( "beep2", 12 ); // clap sound on the third beat of the bar
+
+//            final Button playPauseButton = (Button) findViewById(R.id.activity_rhythmguide_button);
+//            playPauseButton.setOnClickListener(new RhythmGuideActivity.PlayClickHandler());
+
+            //        final SeekBar filterSlider = ( SeekBar ) findViewById( R.id.FilterCutoffSlider );
+            //        filterSlider.setOnSeekBarChangeListener( new FilterCutOffChangeHandler() );
+            //
+            //        final SeekBar decaySlider = ( SeekBar ) findViewById( R.id.SynthDecaySlider );
+            //        decaySlider.setOnSeekBarChangeListener( new SynthDecayChangeHandler() );
+            //
+            //        final SeekBar feedbackSlider = ( SeekBar ) findViewById( R.id.MixSlider );
+            //        feedbackSlider.setOnSeekBarChangeListener( new DelayMixChangeHandler() );
+            //
+            //        final SeekBar tempoSlider = ( SeekBar ) findViewById( R.id.TempoSlider );
+            //        tempoSlider.setOnSeekBarChangeListener( new TempoChangeHandler() );
+
+            _inited = true;
+        }
     }
 
     @Override
@@ -62,6 +220,7 @@ public class MetronomeService extends Service {
         } else if (intent.getAction().equals(Constants.ACTION.METRONOME_PLAY_PAUSE_ACTION)) {
             Log.i(LOG_TAG, "Clicked Play Pause");
             Toast.makeText(this, "Clicked Play Pause", Toast.LENGTH_SHORT).show();
+            play();
         } else if (intent.getAction().equals(Constants.ACTION.METRONOME_CLOSE_ACTION)) {
             Log.i(LOG_TAG, "Clicked Close");
             Toast.makeText(this, "Clicked Close", Toast.LENGTH_SHORT).show();
@@ -177,6 +336,13 @@ public class MetronomeService extends Service {
     @Override
     public void onDestroy() {
         Log.i(LOG_TAG, "In onDestroy");
+
+        if ( _engine != null )
+        {
+            _engine.pause();
+            _engine.dispose();
+        }
+
         super.onDestroy();
 
     }
@@ -220,12 +386,15 @@ public class MetronomeService extends Service {
 
     public void play(){
         Log.i(LOG_TAG, "In play");
+        _sequencerPlaying = !_sequencerPlaying;
+        _engine.getSequencerController().setPlaying( _sequencerPlaying );
     }
 
     public void setBpm(long bpm){
         Log.i(LOG_TAG, "In setBpm, bpm : " + bpm);
         this.bpm = bpm;
         views.setTextViewText(R.id.notification_metronome_bpm_text, "BPM : " + bpm);
+        _engine.getSequencerController().setTempo( bpm, 4, 4 );
         updateNotification();
     }
 
@@ -254,6 +423,10 @@ public class MetronomeService extends Service {
         return accent;
     }
 
+    public boolean isPlaying(){
+        return _sequencerPlaying;
+    }
+
     // use this method to update the Notification's UI
     private void updateNotification(){
 
@@ -263,6 +436,113 @@ public class MetronomeService extends Service {
             mNotificationManager.notify(Constants.NOTIFICATION_ID.METRONOME_FOREGROUND_SERVICE, notification);
         }else if (api >= Build.VERSION_CODES.HONEYCOMB) {
             mNotificationManager.notify(Constants.NOTIFICATION_ID.METRONOME_FOREGROUND_SERVICE, mBuilder.build());
+        }
+    }
+
+    /**
+     * convenience method to load WAV files packaged in the APK
+     * and read their audio content into MWEngine's SampleManager
+     *
+     * @param assetName {String} assetName filename for the resource in the /assets folder
+     * @param sampleName {String} identifier for the files WAV content inside the SampleManager
+     */
+    private void loadWAVAsset( String assetName, String sampleName )
+    {
+        final Context ctx = getApplicationContext();
+
+        boolean result = JavaUtilities.createSampleFromAsset(
+                sampleName, ctx.getAssets(), ctx.getCacheDir().getAbsolutePath(), assetName
+        );
+    }
+
+    /**
+     * convenience method for creating a new SampleEvent
+     *
+     * @param sampleName {String} identifier (inside the SampleManager) of the sample to use
+     * @param position {int} position within the composition to place the event at
+     */
+    private void createDrumEvent( String sampleName, int position )
+    {
+        final SampleEvent drumEvent = new SampleEvent( _sampler );
+        drumEvent.setSample( SampleManager.getSample( sampleName ));
+        drumEvent.positionEvent( 0, STEPS_PER_MEASURE, position );
+        drumEvent.addToSequencer(); // samples have to be explicitly added for playback
+
+        _drumEvents.add( drumEvent );
+    }
+
+    /**
+     *  invoked when user presses the play / pause button
+     */
+    private class PlayClickHandler implements View.OnClickListener
+    {
+        public void onClick( View v )
+        {
+            // start/stop the sequencer so we can toggle hearing actual output! ;)
+            play();
+            if(_sequencerPlaying){
+                views.setImageViewResource(R.id.notification_metronome_play_pause_btn_img, R.drawable.play_icon);
+            }
+            else {
+                views.setImageViewResource(R.id.notification_metronome_play_pause_btn_img, R.drawable.pause_icon);
+            }
+
+        }
+    }
+
+    /* state change message listener */
+
+    private class StateObserver implements MWEngine.IObserver
+    {
+        // cache the enumerations (from native layer) as integer Array
+
+        private final Notifications.ids[] _notificationEnums = Notifications.ids.values();
+
+        public void handleNotification( int aNotificationId )
+        {
+            switch ( _notificationEnums[ aNotificationId ])
+            {
+                case ERROR_HARDWARE_UNAVAILABLE:
+
+                    Log.d( LOG_TAG, "ERROR : received Open SL error callback from native layer" );
+
+                    // re-initialize thread
+                    if ( _engine.canRestartEngine() )
+                    {
+                        _engine.dispose();
+                        _engine.createOutput( SAMPLE_RATE, BUFFER_SIZE, OUTPUT_CHANNELS );
+                        _engine.start();
+                    }
+                    else {
+                        Log.d( LOG_TAG, "exceeded maximum amount of retries. Cannot continue using audio engine" );
+                    }
+                    break;
+
+                case MARKER_POSITION_REACHED:
+
+                    Log.d( LOG_TAG, "Marker position has been reached" );
+                    break;
+            }
+        }
+
+        public void handleNotification( int aNotificationId, int aNotificationValue )
+        {
+            switch ( _notificationEnums[ aNotificationId ])
+            {
+                case SEQUENCER_POSITION_UPDATED:
+
+                    // for this notification id, the notification value describes the precise buffer offset of the
+                    // engine when the notification fired (as a value in the range of 0 - BUFFER_SIZE). using this value
+                    // we can calculate the amount of samples pending until the next step position is reached
+                    // which in turn allows us to calculate the engine latency
+
+                    int sequencerPosition = _sequencerController.getStepPosition();
+                    int elapsedSamples    = _sequencerController.getBufferPosition();
+
+                    Log.d( LOG_TAG, "seq. position: " + sequencerPosition + ", buffer offset: " + aNotificationValue +
+                            ", elapsed samples: " + elapsedSamples );
+                    break;
+            }
         }
     }
 }

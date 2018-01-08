@@ -355,6 +355,9 @@ public class MetronomeActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), bpm + "Constants.ACTION.METRONOME_STARTFOREGROUND_ACTION", Toast.LENGTH_SHORT).show();
                     }
 
+                    if(!mService.isPlaying()){
+                        mService.play();
+                    }
 //                    stopService(intent);
 //                }
             }
