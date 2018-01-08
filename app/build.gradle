@@ -1,9 +1,5 @@
 apply plugin: 'com.android.application'
 
-Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
-def superpowered_sdk_path = properties.getProperty('superpowered.dir')
-
 android {
     compileSdkVersion 25
     buildToolsVersion '26.0.2'
