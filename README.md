@@ -5,6 +5,6 @@ Guitaroid Renewal
 long way to go
 
 ### License
-Apache 2.0
+GPLv3
 ### Contributors
 Logo : ruelcedeno (https://github.com/ruelcedeno)
